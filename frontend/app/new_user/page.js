@@ -69,7 +69,7 @@ const page = () => {
             if (!res.ok) {
                 throw new Error("Failed to submit rating");
             }
-            toast.success("Rating lined up for submission");
+            toast.success("Rating submitted successfully");
         } catch (err) {
             toast.error("Rating submission failed");
         }
@@ -154,7 +154,7 @@ const page = () => {
                                 handleRating(movie, star);
                                 const id = await get_id(movie);
                                 if (id) user_ratings(id, star);
-                                if (id) addtoratings(id, star);
+                                // if (id) addtoratings(id, star);
                             }}
 
                             className={`cursor-pointer text-xl ${star <= currentRating ? "text-yellow-400" : "text-gray-400"

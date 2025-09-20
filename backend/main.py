@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 import pandas as pd
 from joblib import load
-from sklearn.metrics.pairwise import linear_kernel
+# from sklearn.metrics.pairwise import linear_kernel
 import numpy as np
 import subprocess
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -69,21 +69,48 @@ with app.app_context():
 s2 = None
 svd = None
 all_movies = None
+new_ratings_counter = 0
 
 model_lock = threading.Lock()
+
+# def get_data_and_model():
+#     global s2, svd, all_movies
+#     if s2 is None:
+#         print("📂 Loading ratings.csv ...")
+#         s2 = pd.read_csv("models/ratings.csv")
+#         s2 = s2.dropna(subset=["movieId"])
+#         s2['movieId'] = s2['movieId'].astype(int)
+#         all_movies = s2['movieId'].unique()
+#     if svd is None:
+#         print("🤖 Loading SVD model ...")
+#         svd = load("models/svd_model.joblib")
+#     return s2, svd, all_movies
 
 def get_data_and_model():
     global s2, svd, all_movies
     if s2 is None:
-        print("📂 Loading ratings.csv ...")
-        s2 = pd.read_csv("models/ratings.csv")
-        s2 = s2.dropna(subset=["movieId"])
-        s2['movieId'] = s2['movieId'].astype(int)
-        all_movies = s2['movieId'].unique()
+        print("📂 Loading ratings from SQLite ...")
+        ratings = UserRating.query.all()
+        s2 = pd.DataFrame([{"userId": r.userId, "movieId": r.movieId, "rating": r.rating} for r in ratings])
+        if not s2.empty:
+            s2 = s2.dropna(subset=["movieId"])
+            s2['movieId'] = s2['movieId'].astype(int)
+            all_movies = s2['movieId'].unique()
+        else:
+            s2 = pd.DataFrame(columns=["userId", "movieId", "rating"])
+            all_movies = []
     if svd is None:
         print("🤖 Loading SVD model ...")
-        svd = load("models/svd_model.joblib")
+        if os.environ.get("RENDER") == "true":
+            model_path = "/opt/render/project/persistent/models/saved_svd_model.joblib"
+        else:
+            model_path = "models/saved_svd_model.joblib"
+
+        svd = load(model_path)
+
     return s2, svd, all_movies
+
+
 
 def svd_recommendations(user_id):
     with model_lock:
@@ -143,6 +170,16 @@ def add_rating():
         db.session.add(new_rating)
     
     db.session.commit()
+
+    global new_ratings_counter
+    new_ratings_counter += 1
+
+    if new_ratings_counter >= 10:
+        print("Retraining model started...")
+        subprocess.Popen(["python", "svd.py"])  
+        new_ratings_counter = 0
+
+
     return jsonify({"message": "Rating saved"}), 201
 
 
@@ -303,6 +340,12 @@ def clear_ratings():
     db.session.commit()
     return jsonify({"message": "Rating cleared"}), 200
 
+
+
+#---production----
+
+
+
 # @app.route("/api/clear_ratings", methods=["POST"])
 # def clear_ratings():
 #     data = request.get_json()
@@ -340,92 +383,116 @@ def clear_ratings():
 #     return jsonify({"message": "Rating cleared from DB and CSV"}), 200
 
 
-@app.route("/api/addtoratings_csv", methods=["POST"])
-def add_to_ratings_csv():
-    ratings= pd.read_csv("models/ratings.csv") 
-    data = request.get_json()
-    user_id_cookie = request.cookies.get("user_id")
-    if not user_id_cookie:
-        return jsonify({"error": "Authentication required"}), 401
+# @app.route("/api/addtoratings_csv", methods=["POST"])
+# def add_to_ratings_csv():
+#     ratings= pd.read_csv("models/ratings.csv") 
+#     data = request.get_json()
+#     user_id_cookie = request.cookies.get("user_id")
+#     if not user_id_cookie:
+#         return jsonify({"error": "Authentication required"}), 401
 
-    movieId = data.get("movieId")
-    rating = data.get("rating")
+#     movieId = data.get("movieId")
+#     rating = data.get("rating")
 
-    if movieId is None or rating is None:
-        return jsonify({"error": "Movie ID and rating are required"}), 400
+#     if movieId is None or rating is None:
+#         return jsonify({"error": "Movie ID and rating are required"}), 400
 
-    try:
-        app_user_id = int(user_id_cookie)
-        user_Id = app_user_id + MAX_ID_OFFSET
-        movieId = int(movieId)
-        rating = int(rating)
-    except ValueError:
-        return jsonify({"error": "Invalid data format"}), 400
+#     try:
+#         app_user_id = int(user_id_cookie)
+#         user_Id = app_user_id + MAX_ID_OFFSET
+#         movieId = int(movieId)
+#         rating = int(rating)
+#     except ValueError:
+#         return jsonify({"error": "Invalid data format"}), 400
 
-    new_entry = pd.DataFrame({
-        "userId": [user_Id],
-        "movieId": [movieId],
-        "rating": [rating]
-    })
-
-    
-    mask = (ratings["userId"] == user_Id) & (ratings["movieId"] == movieId)
-
-    if mask.any():
-        
-        ratings.loc[mask, "rating"] = rating
-        message = "Rating updated in CSV"
-    else:
-        
-        new_entry = pd.DataFrame({
-            "userId": [user_Id],
-            "movieId": [movieId],
-            "rating": [rating]
-        })
-        ratings = pd.concat([ratings, new_entry], ignore_index=True)
-        message = "Rating added to CSV"
+#     new_entry = pd.DataFrame({
+#         "userId": [user_Id],
+#         "movieId": [movieId],
+#         "rating": [rating]
+#     })
 
     
-    ratings.to_csv("models/ratings.csv", index=False)
+#     mask = (ratings["userId"] == user_Id) & (ratings["movieId"] == movieId)
 
-    return jsonify({"message": message}), 201
+#     if mask.any():
+        
+#         ratings.loc[mask, "rating"] = rating
+#         message = "Rating updated in CSV"
+#     else:
+        
+#         new_entry = pd.DataFrame({
+#             "userId": [user_Id],
+#             "movieId": [movieId],
+#             "rating": [rating]
+#         })
+#         ratings = pd.concat([ratings, new_entry], ignore_index=True)
+#         message = "Rating added to CSV"
+
+    
+#     ratings.to_csv("models/ratings.csv", index=False)
+
+#     return jsonify({"message": message}), 201
 
 
 
-india = pytz.timezone("Asia/Kolkata")
+# india = pytz.timezone("Asia/Kolkata")
 
-def retrain_model():
-    global s2, svd, all_movies
-    with model_lock:   
-        try:
-            print("Retraining model started...")
-            process = subprocess.run(["python", "svd.py"], capture_output=True, text=True)
+# def retrain_model():
+#     global s2, svd, all_movies
+#     with model_lock:   
+#         try:
+#             print("Retraining model started...")
+#             process = subprocess.run(["python", "svd.py"], capture_output=True, text=True)
 
-            if process.returncode != 0:
-                print("Retraining failed:", process.stderr)
-                return
+#             if process.returncode != 0:
+#                 print("Retraining failed:", process.stderr)
+#                 return
 
             
-            s2 = pd.read_csv("models/ratings.csv")
-            all_movies = s2['movieId'].unique()
-            svd = load("models/svd_model.joblib")
+#             s2 = pd.read_csv("models/ratings.csv")
+#             all_movies = s2['movieId'].unique()
+#             svd = load("models/svd_model.joblib")
 
-            print("Model retrained and reloaded!")
-        except Exception as e:
-            print(f"Retraining error: {str(e)}")
+#             print("Model retrained and reloaded!")
+#         except Exception as e:
+#             print(f"Retraining error: {str(e)}")
+
+# def retrain_model():
+#     global s2, svd, all_movies
+#     with model_lock:
+#         try:
+#             print("Retraining model started...")
+#             process = subprocess.run(["python", "svd.py"], capture_output=True, text=True)
+
+#             if process.returncode != 0:
+#                 print("Retraining failed:", process.stderr)
+#                 return
+
+#             # Reload from SQLite
+#             ratings = UserRating.query.all()
+#             s2 = pd.DataFrame([{"userId": r.userId, "movieId": r.movieId, "rating": r.rating} for r in ratings])
+#             if not s2.empty:
+#                 all_movies = s2['movieId'].unique()
+#             else:
+#                 all_movies = []
+#             svd = load("models/saved_svd_model.joblib")
+
+#             print("Model retrained and reloaded!")
+#         except Exception as e:
+#             print(f"Retraining error: {str(e)}")
 
 
+# scheduler = BackgroundScheduler(timezone=india)
+# scheduler.add_job(func=retrain_model, trigger="cron", hour=0, minute=20)
+# scheduler.start()
 
-scheduler = BackgroundScheduler(timezone=india)
-scheduler.add_job(func=retrain_model, trigger="cron", hour=2, minute=30)
-scheduler.start()
 
-
-atexit.register(lambda: scheduler.shutdown())
+# atexit.register(lambda: scheduler.shutdown())
 
     
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5500))  # fallback to 5500 for local dev
-    app.run(host="0.0.0.0", port=port, debug=True)
+    debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
