@@ -17,7 +17,7 @@ const page = () => {
     useEffect(() => {
         const checkUser = async () => {
             try {
-                const res = await fetch("http://localhost:5500/api/user", {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user`, {
                     method: "GET",
                     credentials: "include",
                 });
@@ -49,7 +49,7 @@ const page = () => {
             return;
         }
         try {
-            const res = await fetch("http://localhost:5500/api/add_rating", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_rating`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ movieId, rating }),
@@ -122,7 +122,7 @@ const page = () => {
     const svd = async () => {
         setLoading(true);
         try {
-            const res = await fetch("http://localhost:5500/api/svd_recommend", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/svd_recommend`, {
                 method: "GET",
                 credentials: "include",
             });
@@ -150,7 +150,7 @@ const page = () => {
             <section className='flex flex-col items-center gap-8 py-24'>
                 <h1 className='font-bold text-4xl'>Hello {user.name}</h1>
                 <h2 className='font-serif text-2xl'>Movies Recommendation Based On Your Previous Ratings </h2>
-                <h2 className='font-serif text-xl'>New model will train at 2:30(IST). Please try later if getting problem</h2>
+                <h2 className='font-serif text-xl'>New model will train automatically after 10 new ratings submitted</h2>
                 <h2 className='font-serif text-xl'>For testing use:- Email:user@gmail.com, Password:12345678</h2>
                 
 

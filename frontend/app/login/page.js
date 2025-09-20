@@ -14,7 +14,7 @@ const page = () => {
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
-                const res = await fetch("http://localhost:5500/api/checklogin", {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/checklogin`, {
                     method: "GET",
                     credentials: "include"
                 });
@@ -35,7 +35,7 @@ const page = () => {
         e.preventDefault();
         setError('');
         try {
-            const res = await fetch("http://localhost:5500/api/login", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, password }),
@@ -60,7 +60,7 @@ const page = () => {
 
     const logout = async () => {
         try {
-            const res = await fetch("http://localhost:5500/api/logout", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`, {
                 method: "POST",
                 credentials: "include"
             });

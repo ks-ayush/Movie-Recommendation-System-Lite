@@ -18,7 +18,7 @@ const page = () => {
         setError('');
 
         try {
-            const res = await fetch("http://localhost:5500/api/signup", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/signup`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, mobile, password }),

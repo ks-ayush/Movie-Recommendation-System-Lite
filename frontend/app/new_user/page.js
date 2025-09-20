@@ -16,7 +16,7 @@ const page = () => {
     useEffect(() => {
         const checkLoginStatus = async () => {
             try {
-                const res = await fetch("http://localhost:5500/api/checklogin", {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/checklogin`, {
                     method: "GET",
                     credentials: "include"
                 });
@@ -34,7 +34,7 @@ const page = () => {
 
     const get_id = async (title) => {
         try {
-            const res = await fetch("http://localhost:5500/api/movie_id", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/movie_id`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ title }),
@@ -60,7 +60,7 @@ const page = () => {
             return;
         }
         try {
-            const res = await fetch("http://localhost:5500/api/add_rating", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/add_rating`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ movieId, rating }),
@@ -120,7 +120,7 @@ const page = () => {
             return;
         }
         try {
-            const res = await fetch("http://localhost:5500/api/clear_ratings", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/clear_ratings`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ movieId }),
@@ -189,7 +189,7 @@ const page = () => {
         setMovies([]);
 
         try {
-            const res = await fetch("http://localhost:5500/api/recommend", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/recommend`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ title }),
