@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 
-const page = () => {
+const ExistingPage = () => {
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [movies, setMovies] = useState([]);
@@ -194,4 +194,4 @@ const page = () => {
     )
 }
 
-export default page
+export default ExistingPage

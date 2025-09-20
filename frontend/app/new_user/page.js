@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
 
-const page = () => {
+const NewPage = () => {
 
     const [title, setTitle] = useState("");
     const [movies, setMovies] = useState([]);
@@ -91,7 +91,7 @@ const page = () => {
             return;
         }
         try {
-            const res = await fetch("http://localhost:5500/api/addtoratings_csv", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/addtoratings_csv`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ movieId, rating }),
@@ -278,4 +278,4 @@ const page = () => {
     )
 }
 
-export default page
+export default NewPage

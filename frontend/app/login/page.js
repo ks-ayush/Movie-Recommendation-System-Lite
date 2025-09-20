@@ -3,7 +3,8 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify';
-const page = () => {
+
+const LoginPage = () => {
     const [error, setError] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -143,4 +144,4 @@ const page = () => {
     )
 }
 
-export default page
+export default LoginPage
