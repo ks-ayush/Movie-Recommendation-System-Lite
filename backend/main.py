@@ -19,8 +19,14 @@ import threading
 
 load_dotenv()
 
+# app = Flask(__name__)
+# CORS(app, supports_credentials=True ,origins=["http://localhost:3000"])
+
 app = Flask(__name__)
-CORS(app, supports_credentials=True ,origins=["http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=[
+    "http://localhost:3000",
+    "https://movie-recommendation-system-lite.vercel.app"
+])
 
 # DB_USER = os.getenv('DB_USER')
 # DB_PASSWORD = os.getenv('DB_PASSWORD')
