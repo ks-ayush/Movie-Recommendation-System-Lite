@@ -266,7 +266,7 @@ def svd_recommend():
     results = svd_recommendations(user_Id)
 
     if not results:
-        return jsonify({"error": "No recommendations found or insufficient data. Please rate atleast 10 movies"}), 404
+        return jsonify({"error": "No recommendations found or insufficient data. Please rate atleast 5 movies"}), 404
 
     return jsonify({"recommendations": results}), 200
 
@@ -289,16 +289,29 @@ def login():
         "user": {"name": user.name, "email": user.email}
     }))
 
-    # Store the user ID or email in the cookie (example only)
+    # # Store the user ID or email in the cookie (example only)
+    # resp.set_cookie(
+    #     "user_id",
+    #     str(user.id),         # or user.email
+    #     path="/", 
+    #     httponly=True,        # prevents JavaScript access
+    #     secure=True,         # set to True in production (HTTPS)
+    #     samesite="None",    # helps prevent CSRF (set to 'Lax' or 'Strict' as needed)
+    #     max_age=7 * 24 * 60 * 60  # 7 days in seconds
+    # )
+
+    is_production = os.environ.get("RENDER") == "true"
+
     resp.set_cookie(
         "user_id",
-        str(user.id),         # or user.email
-        path="/", 
-        httponly=True,        # prevents JavaScript access
-        secure=True,         # set to True in production (HTTPS)
-        samesite="None",    # helps prevent CSRF (set to 'Lax' or 'Strict' as needed)
-        max_age=7 * 24 * 60 * 60  # 7 days in seconds
+        str(user.id),
+        path="/",
+        httponly=True,
+        secure=is_production,                 
+        samesite="Lax" if not is_production else "None",  
+        max_age=7 * 24 * 60 * 60
     )
+
 
     return resp
 
