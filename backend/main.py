@@ -26,6 +26,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=[
     "http://localhost:3000",
     "https://movie-recommendation-system-lite.vercel.app"
+    "https://movie-recommendation-system-lite-1.vercel.app"
 ])
 
 # DB_USER = os.getenv('DB_USER')

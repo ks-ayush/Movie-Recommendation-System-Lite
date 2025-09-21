@@ -75,7 +75,7 @@ const ExistingPage = () => {
             return;
         }
         try {
-            const res = await fetch("http://localhost:5500/api/addtoratings_csv", {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/addtoratings_csv`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ movieId, rating }),
@@ -150,8 +150,8 @@ const ExistingPage = () => {
             <section className='flex flex-col items-center gap-8 py-24'>
                 <h1 className='font-bold text-4xl'>Hello {user.name}</h1>
                 <h2 className='font-serif text-2xl'>Movies Recommendation Based On Your Previous Ratings </h2>
-                <h2 className='font-serif text-xl'>New model will train automatically after 10 new ratings submitted</h2>
-                <h2 className='font-serif text-xl'>For testing use:- Email:user@gmail.com, Password:12345678</h2>
+                <h2 className='font-serif text-xl'>New model will train automatically after 2 new ratings submitted</h2>
+                <h2 className='font-serif text-xl'>This feature may be affected because of free server</h2>
                 
 
             </section>
