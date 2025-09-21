@@ -82,6 +82,7 @@ const ExistingPage = () => {
                 credentials: "include"
             });
             if (!res.ok) {
+                
                 throw new Error("Failed to submit rating");
             }
             toast.success("Rating submitted successfully");
