@@ -201,7 +201,8 @@ def add_rating():
 
     
     app_user_id = int(user_id_cookie)
-    user_Id = app_user_id + MAX_ID_OFFSET
+    # user_Id = app_user_id + MAX_ID_OFFSET
+    user_Id = app_user_id 
 
    
     existing_rating = UserRating.query.filter_by(userId=user_Id, movieId=movie_id).first()
@@ -262,7 +263,8 @@ def svd_recommend():
         return jsonify({"error": "Authentication required"}), 401
 
     app_user_id = int(user_id_cookie)
-    user_Id = app_user_id + MAX_ID_OFFSET
+    # user_Id = app_user_id + MAX_ID_OFFSET
+    user_Id = app_user_id
     results = svd_recommendations(user_Id)
 
     if not results:
@@ -300,7 +302,7 @@ def login():
     #     max_age=7 * 24 * 60 * 60  # 7 days in seconds
     # )
 
-    is_production = os.environ.get("RENDER") == "true"
+    is_production = os.environ.get("RENDER", "").lower() == "true"
 
     resp.set_cookie(
         "user_id",
@@ -389,7 +391,8 @@ def clear_ratings():
     if not movieid:
         return jsonify({"error": "Movie ID is required"}), 400
     app_user_id = int(user_id_cookie)
-    user_Id = app_user_id + MAX_ID_OFFSET
+    # user_Id = app_user_id + MAX_ID_OFFSET
+    user_Id = app_user_id
     rating = UserRating.query.filter_by(userId=user_Id, movieId=movieid).first()
     if not rating:
         return jsonify({"error": "Rating not found"}), 404  
@@ -550,6 +553,6 @@ def clear_ratings():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5500))  # fallback to 5500 for local dev
+    port = int(os.environ.get("PORT", 5500)) 
     debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
