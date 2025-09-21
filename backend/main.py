@@ -160,7 +160,7 @@ def svd_recommendations(user_id):
     with model_lock:
         s2, svd, all_movies = get_data_and_model()
         ratings_by_user = s2[s2['userId'] == user_id]
-        if ratings_by_user.shape[0] < 10:
+        if ratings_by_user.shape[0] < 5:
             return []
 
         movie_seen = set(ratings_by_user['movieId'])
@@ -343,7 +343,7 @@ def check_login():
 
     user = User.query.get(user_id)
     if not user:
-        return jsonify({"isLoggedIn": False}), 404
+        return jsonify({"isLoggedIn": False}), 200
 
     return jsonify({"isLoggedIn": True, "user": {"name": user.name, "email": user.email}}), 200
 
