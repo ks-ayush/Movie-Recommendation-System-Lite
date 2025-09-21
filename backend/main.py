@@ -92,12 +92,38 @@ model_lock = threading.Lock()
 #         svd = load("models/svd_model.joblib")
 #     return s2, svd, all_movies
 
+# def get_data_and_model():
+#     global s2, svd, all_movies
+#     if s2 is None:
+#         print("📂 Loading ratings from SQLite ...")
+#         ratings = UserRating.query.all()
+#         s2 = pd.DataFrame([{"userId": r.userId, "movieId": r.movieId, "rating": r.rating} for r in ratings])
+#         if not s2.empty:
+#             s2 = s2.dropna(subset=["movieId"])
+#             s2['movieId'] = s2['movieId'].astype(int)
+#             all_movies = s2['movieId'].unique()
+#         else:
+#             s2 = pd.DataFrame(columns=["userId", "movieId", "rating"])
+#             all_movies = []
+#     if svd is None:
+#         print("🤖 Loading SVD model ...")
+#         if os.environ.get("RENDER") == "true":
+#             model_path = "/opt/render/project/persistent/models/saved_svd_model.joblib"
+#         else:
+#             model_path = "models/saved_svd_model.joblib"
+
+#         svd = load(model_path)
+
+#     return s2, svd, all_movies
+
 def get_data_and_model():
     global s2, svd, all_movies
+
     if s2 is None:
-        print("📂 Loading ratings from SQLite ...")
+        print("Loading ratings from SQLite ...")
         ratings = UserRating.query.all()
         s2 = pd.DataFrame([{"userId": r.userId, "movieId": r.movieId, "rating": r.rating} for r in ratings])
+
         if not s2.empty:
             s2 = s2.dropna(subset=["movieId"])
             s2['movieId'] = s2['movieId'].astype(int)
@@ -105,16 +131,28 @@ def get_data_and_model():
         else:
             s2 = pd.DataFrame(columns=["userId", "movieId", "rating"])
             all_movies = []
+
     if svd is None:
         print("🤖 Loading SVD model ...")
+
         if os.environ.get("RENDER") == "true":
-            model_path = "/opt/render/project/persistent/models/saved_svd_model.joblib"
+            persistent_model_folder = "/opt/render/project/persistent/models"
+            os.makedirs(persistent_model_folder, exist_ok=True)
+            persistent_model_path = os.path.join(persistent_model_folder, "saved_svd_model.joblib")
+
+            if os.path.exists(persistent_model_path):
+                model_path = persistent_model_path
+            else:
+                # first deploy: use model from repo
+                model_path = "models/saved_svd_model.joblib"
         else:
             model_path = "models/saved_svd_model.joblib"
 
         svd = load(model_path)
+        print(f"SVD model loaded from {model_path}")
 
     return s2, svd, all_movies
+
 
 
 
