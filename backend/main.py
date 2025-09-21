@@ -160,13 +160,13 @@ def svd_recommendations(user_id):
     with model_lock:
         s2, svd, all_movies = get_data_and_model()
         ratings_by_user = s2[s2['userId'] == user_id]
-        if ratings_by_user.shape[0] < 5:
+        if ratings_by_user.shape[0] < 2:
             return []
    
         movie_seen = set(ratings_by_user['movieId'])
         unrated_movie_ids = [int(m) for m in all_movies if pd.notna(m) and m not in movie_seen]
 
-        predictions = [(mid, svd.predict(user_id, mid).est) for mid in unrated_movie_ids[:4000]]
+        predictions = [(mid, svd.predict(user_id, mid).est) for mid in unrated_movie_ids[:200]]
         predictions.sort(key=lambda x: x[1], reverse=True)
         top_movies = [int(pred[0]) for pred in predictions[:20]]
 
@@ -218,7 +218,7 @@ def add_rating():
     global new_ratings_counter
     new_ratings_counter += 1
 
-    if new_ratings_counter >= 5:
+    if new_ratings_counter >= 2:
         print("Retraining model started...")
         subprocess.Popen(["python", "svd.py"])  
         new_ratings_counter = 0
@@ -266,7 +266,7 @@ def svd_recommend():
     results = svd_recommendations(user_Id)
 
     if not results:
-        return jsonify({"error": "No recommendations found or insufficient data. Please rate atleast 5 movies"}), 404
+        return jsonify({"error": "No recommendations found or insufficient data. Please rate atleast 2 movies"}), 404
 
     return jsonify({"recommendations": results}), 200
 
