@@ -162,7 +162,7 @@ def svd_recommendations(user_id):
         ratings_by_user = s2[s2['userId'] == user_id]
         if ratings_by_user.shape[0] < 5:
             return []
-
+   
         movie_seen = set(ratings_by_user['movieId'])
         unrated_movie_ids = [int(m) for m in all_movies if pd.notna(m) and m not in movie_seen]
 
@@ -218,7 +218,7 @@ def add_rating():
     global new_ratings_counter
     new_ratings_counter += 1
 
-    if new_ratings_counter >= 10:
+    if new_ratings_counter >= 5:
         print("Retraining model started...")
         subprocess.Popen(["python", "svd.py"])  
         new_ratings_counter = 0
