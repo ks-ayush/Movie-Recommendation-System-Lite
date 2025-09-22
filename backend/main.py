@@ -200,6 +200,13 @@ def add_rating():
     if not user_id_cookie:
         return jsonify({"error": "Authentication required"}), 401
     
+    try:
+        user = User.query.get(int(user_id_cookie))
+        if not user:
+            return jsonify({"error": "Invalid user. Please log in again."}), 401
+    except (ValueError, TypeError):
+        return jsonify({"error": "Invalid user ID format."}), 400
+    
     data = request.get_json()
     movie_id = data.get("movieId")
     rating = data.get("rating")
@@ -227,51 +234,7 @@ def add_rating():
     global new_ratings_counter
     new_ratings_counter += 1
 
-    # if new_ratings_counter >= 2:
-    #     print("Retraining model started...")
-    #     subprocess.Popen(["python", "svd.py"]) 
-    #     # process = subprocess.run(["python", "svd.py"], capture_output=True, text=True) 
-    #     process = subprocess.run(
-    #         ["python", os.path.join(os.path.dirname(__file__), "svd.py")],
-    #         capture_output=True, text=True
-    #     )
-    #     new_ratings_counter = 0
-
-    #     if process.returncode == 0:
-    #         with model_lock:
-    #             global svd
-    #             svd = load("/opt/render/project/persistent/models/saved_svd_model.joblib")
-    #     else:
-    #         print("Retraining failed:", process.stderr)
-
-    # if new_ratings_counter >= 2:
-    #     print("Retraining model started...")
-
-    #     svd_path = os.path.join(os.path.dirname(__file__), "svd.py")
-
-    #     try:
-    #         subprocess.Popen(["python", svd_path])
-    #         print(f"Retraining process started: {svd_path}")
-    #         # with model_lock:
-    #         #     global svd
-    #         #     if os.environ.get("RENDER") == "true":
-    #         #         svd = load("/opt/render/project/persistent/models/saved_svd_model.joblib")
-    #         #     else:
-    #         #         svd = load("models/saved_svd_model.joblib")
-    #     except Exception as e:
-    #         print(f"Failed to start retraining: {e}")
-
-    #     new_ratings_counter = 0 
-        
-        # with model_lock:
-        #         global svd
-        #         if os.environ.get("RENDER") == "true":
-        #             svd = load("/opt/render/project/persistent/models/saved_svd_model.joblib")
-        #             print("Model reloaded from /opt/render/project/persistent/models/saved_svd_model.joblib")
-        #         else:
-        #             svd = load("models/saved_svd_model.joblib")
-        #             print("Model reloaded from models/saved_svd_model.joblib")
-
+    
     if new_ratings_counter >= 2:
         print("Retraining model started...")
         subprocess.Popen(["python", "svd.py"])  
@@ -397,10 +360,27 @@ def get_user():
         "mobile": user.mobile
     }), 200
 
+# @app.route("/api/logout", methods=["POST"])
+# def logout():
+#     resp = make_response(jsonify({"message": "Logged out successfully"}))
+#     resp.set_cookie("user_id", "", expires=0)
+#     return resp
+
+
 @app.route("/api/logout", methods=["POST"])
 def logout():
     resp = make_response(jsonify({"message": "Logged out successfully"}))
-    resp.set_cookie("user_id", "", expires=0)
+    is_production = os.environ.get("RENDER", "").lower() == "true"
+    
+    
+    resp.set_cookie(
+        "user_id", "",
+        path="/",
+        httponly=True,
+        secure=is_production,
+        samesite="Lax" if not is_production else "None",
+        expires=0 
+    )
     return resp
 
 @app.route("/api/checklogin", methods=["GET"])
