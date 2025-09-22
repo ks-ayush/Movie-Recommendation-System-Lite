@@ -167,7 +167,14 @@ def svd_recommendations(user_id):
         movie_seen = set(ratings_by_user['movieId'])
         unrated_movie_ids = [int(m) for m in all_movies if pd.notna(m) and m not in movie_seen]
 
-        predictions = [(mid, svd.predict(user_id, mid).est) for mid in unrated_movie_ids[:200]]
+        # predictions = [(mid, svd.predict(user_id, mid).est) for mid in unrated_movie_ids[:200]]
+        predictions = []
+        for mid in unrated_movie_ids[:200]:
+            try:
+                est = svd.predict(user_id, mid).est
+            except:
+                est = 3.0  
+            predictions.append((mid, est))
         predictions.sort(key=lambda x: x[1], reverse=True)
         top_movies = [int(pred[0]) for pred in predictions[:20]]
 
@@ -202,7 +209,7 @@ def add_rating():
 
     
     app_user_id = int(user_id_cookie)
-    # user_Id = app_user_id + MAX_ID_OFFSET
+    # user_Id = app_user_id + MAX_ID_OFFSET    
     user_Id = app_user_id 
 
    
@@ -220,11 +227,61 @@ def add_rating():
     global new_ratings_counter
     new_ratings_counter += 1
 
+    # if new_ratings_counter >= 2:
+    #     print("Retraining model started...")
+    #     subprocess.Popen(["python", "svd.py"]) 
+    #     # process = subprocess.run(["python", "svd.py"], capture_output=True, text=True) 
+    #     process = subprocess.run(
+    #         ["python", os.path.join(os.path.dirname(__file__), "svd.py")],
+    #         capture_output=True, text=True
+    #     )
+    #     new_ratings_counter = 0
+
+    #     if process.returncode == 0:
+    #         with model_lock:
+    #             global svd
+    #             svd = load("/opt/render/project/persistent/models/saved_svd_model.joblib")
+    #     else:
+    #         print("Retraining failed:", process.stderr)
+
+    # if new_ratings_counter >= 2:
+    #     print("Retraining model started...")
+
+    #     svd_path = os.path.join(os.path.dirname(__file__), "svd.py")
+
+    #     try:
+    #         subprocess.Popen(["python", svd_path])
+    #         print(f"Retraining process started: {svd_path}")
+    #         # with model_lock:
+    #         #     global svd
+    #         #     if os.environ.get("RENDER") == "true":
+    #         #         svd = load("/opt/render/project/persistent/models/saved_svd_model.joblib")
+    #         #     else:
+    #         #         svd = load("models/saved_svd_model.joblib")
+    #     except Exception as e:
+    #         print(f"Failed to start retraining: {e}")
+
+    #     new_ratings_counter = 0 
+        
+        # with model_lock:
+        #         global svd
+        #         if os.environ.get("RENDER") == "true":
+        #             svd = load("/opt/render/project/persistent/models/saved_svd_model.joblib")
+        #             print("Model reloaded from /opt/render/project/persistent/models/saved_svd_model.joblib")
+        #         else:
+        #             svd = load("models/saved_svd_model.joblib")
+        #             print("Model reloaded from models/saved_svd_model.joblib")
+
     if new_ratings_counter >= 2:
         print("Retraining model started...")
         subprocess.Popen(["python", "svd.py"])  
         new_ratings_counter = 0
 
+        with model_lock:
+            global svd,s2
+            svd = None 
+            s2 = None
+        
 
     return jsonify({"message": "Rating saved"}), 201
 
@@ -550,10 +607,15 @@ def clear_ratings():
 
 # atexit.register(lambda: scheduler.shutdown())
 
-    
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5500)) 
     debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
     app.run(host="0.0.0.0", port=port, debug=debug_mode)
+
+# if __name__ == "__main__":
+#     with app.app_context():
+#         get_data_and_model()
+#     port = int(os.environ.get("PORT", 5500))
+#     debug_mode = os.environ.get("DEBUG", "False").lower() == "true"
+#     app.run(host="0.0.0.0", port=port, debug=debug_mode)

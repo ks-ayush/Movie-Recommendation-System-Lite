@@ -5,4 +5,4 @@ instance/
 test.py
 models/ratings.csv
 models/svd_model.joblib
-models/saved_svd_model.joblib
+# models/saved_svd_model.joblib
