@@ -54,7 +54,7 @@ db = SQLAlchemy(app)
 
 # db = SQLAlchemy(app)
 
-MAX_ID_OFFSET = 200950
+MAX_ID_OFFSET = 200
 
 # User Model
 class User(db.Model):
@@ -209,8 +209,8 @@ def add_rating():
 
     
     app_user_id = int(user_id_cookie)
-    # user_Id = app_user_id + MAX_ID_OFFSET    
-    user_Id = app_user_id 
+    user_Id = app_user_id + MAX_ID_OFFSET    
+    # user_Id = app_user_id 
 
    
     existing_rating = UserRating.query.filter_by(userId=user_Id, movieId=movie_id).first()
@@ -321,8 +321,8 @@ def svd_recommend():
         return jsonify({"error": "Authentication required"}), 401
 
     app_user_id = int(user_id_cookie)
-    # user_Id = app_user_id + MAX_ID_OFFSET
-    user_Id = app_user_id
+    user_Id = app_user_id + MAX_ID_OFFSET
+    # user_Id = app_user_id
     results = svd_recommendations(user_Id)
 
     if not results:
@@ -449,8 +449,8 @@ def clear_ratings():
     if not movieid:
         return jsonify({"error": "Movie ID is required"}), 400
     app_user_id = int(user_id_cookie)
-    # user_Id = app_user_id + MAX_ID_OFFSET
-    user_Id = app_user_id
+    user_Id = app_user_id + MAX_ID_OFFSET
+    # user_Id = app_user_id
     rating = UserRating.query.filter_by(userId=user_Id, movieId=movieid).first()
     if not rating:
         return jsonify({"error": "Rating not found"}), 404  
